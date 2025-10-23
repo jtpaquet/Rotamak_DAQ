@@ -1,0 +1,175 @@
+{
+  "triggers": {
+    "enable": {
+      "duration": {
+        "min": 0,
+        "max": 500,
+        "step": 5,
+        "default": 100
+      },
+      "delay": {
+        "min": 0,
+        "max": 500,
+        "step": 5,
+        "default": 0
+      }
+    },
+    "dcField": {
+      "duration": {
+        "min": 0,
+        "max": 500,
+        "step": 5,
+        "default": 100
+      },
+      "delay": {
+        "min": 0,
+        "max": 500,
+        "step": 5,
+        "default": 10
+      }
+    },
+    "rmfField": {
+      "duration": {
+        "min": 0,
+        "max": 500,
+        "step": 5,
+        "default": 100
+      },
+      "delay": {
+        "min": 0,
+        "max": 500,
+        "step": 5,
+        "default": 10
+      }
+    },
+    "extra": {
+      "duration": {
+        "min": 0,
+        "max": 500,
+        "step": 5,
+        "default": 100
+      },
+      "delay": {
+        "min": 0,
+        "max": 500,
+        "step": 5,
+        "default": 10
+      }
+    }
+  },
+  "raspberryPi": {
+    "rmfFreq": {
+      "min": 0,
+      "max": 1000,
+      "step": 0.01,
+      "decimals": 2,
+      "default": 100
+    },
+    "dutyCycle": {
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "decimals": 1,
+      "default": 25
+    }
+  },
+  "pxi": {
+    "sampleRate": {
+      "min": 1,
+      "max": 2500,
+      "step": 100,
+      "default": 1000,
+      "unit": "kS/s"
+    },
+    "totalSamples": {
+      "min": 0,
+      "max": 1000000,
+      "step": 50000,
+      "default": 100000
+    },
+    "acquisitionTime": {
+      "min": 0,
+      "max": 10000,
+      "step": 20,
+      "decimals": 2,
+      "default": 100,
+      "unit": "ms"
+    },
+    "pxi1": {
+      "channelNames": [
+        "ai0",
+        "ai1",
+        "ai2",
+        "ai3",
+        "ai4",
+        "ai5",
+        "ai6",
+        "ai7"
+      ],
+      "defaultRange": "10v"
+    },
+    "pxi2": {
+      "channelNames": [
+        "ai0",
+        "ai1",
+        "ai2",
+        "ai3",
+        "ai4",
+        "ai5",
+        "ai6",
+        "ai7"
+      ],
+      "defaultRange": "10v"
+    },
+    "pxi3": {
+      "channelNames": [
+        "ai0",
+        "ai1",
+        "ai2",
+        "ai3",
+        "ai4",
+        "ai5",
+        "ai6",
+        "ai7"
+      ],
+      "defaultRange": "10v"
+    }
+  },
+  "picoscope": {
+    "sampleRate": {
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "default": 100,
+      "unit": "kS/s"
+    },
+    "totalSamples": {
+      "min": 0,
+      "max": 1000000,
+      "step": 50000,
+      "default": 5000
+    },
+    "acquisitionTime": {
+      "min": 0,
+      "max": 10000,
+      "step": 20,
+      "decimals": 4,
+      "default": 0.05,
+      "unit": "ms"
+    }
+  },
+  "visualization": {
+    "tracesPerGraph": {
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 2
+    },
+    "graphsToDisplay": {
+      "min": 1,
+      "max": 16,
+      "step": 1,
+      "default": 16
+    }
+  }
+}

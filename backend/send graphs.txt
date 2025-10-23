@@ -1,0 +1,105 @@
+
+=========================================================
+=========================================================
+
+# views.py
+from django.http import JsonResponse
+import plotly.express as px
+
+def graph_json_view(request):
+    fig = px.line(
+        x=[1, 2, 3, 4],
+        y=[10, 15, 13, 17],
+        labels={'x': 'X Axis', 'y': 'Y Axis'},
+        title='Simple Line Chart'
+    )
+
+    fig_dict = fig.to_dict()
+
+    return JsonResponse(fig_dict)
+
+=========================================================
+=========================================================
+🧩 Step 2: React — Install react-plotly.js and plotly.js
+
+In your React project (Vite or CRA), run:
+
+npm install react-plotly.js plotly.js
+
+
+
+3. Frontend: Render with <img src="data:image/png;base64,...">
+// React component
+import React, { useEffect, useState } from 'react';
+
+function GraphDisplay() {
+  const [imageData, setImageData] = useState(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/graph/')
+      .then((res) => res.json())
+      .then((data) => {
+        setImageData(`data:image/png;base64,${data.image}`);
+      });
+  }, []);
+
+  return (
+    <div>
+      {imageData ? (
+        <img src={imageData} alt="Graph" style={{ maxWidth: '100%' }} />
+      ) : (
+        <p>Loading graph...</p>
+      )}
+    </div>
+  );
+}
+
+export default GraphDisplay;
+
+
+=========================================================
+=========================================================
+🧩 Step 3: React — Create a component to fetch and render the chart
+
+
+
+
+// GraphViewer.jsx
+import React, { useEffect, useState } from 'react';
+import Plot from 'react-plotly.js';
+
+function GraphViewer() {
+  const [plotData, setPlotData] = useState(null);
+
+  useEffect(() => {
+    // Define the async function inside useEffect
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/graph-json/'); // Same URL
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json(); // Wait for JSON parsing
+        setPlotData(data); // Update state
+      } catch (error) {
+        console.error('Error fetching plot:', error);
+      }
+    };
+
+    // Call the async function
+    fetchData();
+  }, []); // Empty dependency array → runs once on mount
+
+  if (!plotData) return <p>Loading plot...</p>;
+
+  return (
+    <Plot
+      data={plotData.data}
+      layout={plotData.layout}
+      config={plotData.config || {}}
+      style={{ width: '100%', height: '100%' }}
+    />
+  );
+}
+
+export default GraphViewer;

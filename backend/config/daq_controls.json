@@ -1,0 +1,35 @@
+{
+  "triggers": {
+    "enable": {
+      "duration": 100,
+      "delay": 0
+    },
+    "dcField": {
+      "duration": 80,
+      "delay": 10
+    },
+    "rmfField": {
+      "duration": 60,
+      "delay": 20
+    },
+    "extra": {
+      "duration": 0,
+      "delay": 0
+    }
+  },
+  "raspberryPi": {
+    "rmfFreq": 100,
+    "dutyCycle1": 25,
+    "dutyCycle2": 25
+  },
+  "fileHandle": {
+    "date": "2025-10-21 - 15:07:48",
+    "fileName": "",
+    "fileAppend": "",
+    "saveDirectory": "",
+    "saveData": true
+  },
+  "shotInfo": {
+    "gas": ""
+  }
+}

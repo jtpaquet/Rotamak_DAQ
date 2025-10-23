@@ -1,0 +1,11 @@
+Watching for file changes with StatReloader
+C:\Users\jtpaq\OneDrive\Bureau\DAQ-qrex-local\App\QREX_daq\urls.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 05, 2025 - 03:28:20
+Django version 5.0, using settings 'QREX_daq.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
+
+Watching for file changes with StatReloader
