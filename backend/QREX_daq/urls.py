@@ -19,12 +19,13 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from frontend.views import index, receive_controls, receive_settings, send_settings, graph_json_view, start_data_acquisition, acquire_data
+from frontend.views import index, receive_controls, receive_settings, send_settings, graph_json_view, start_data_acquisition, acquire_data, start_dischage
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/config/save', receive_settings, name='receive_settings'),
     path('api/daq-control', receive_controls, name='receive_controls'),
+    path('api/daq-discharge', start_dischage, name='start_dischage'),
     path('api/daq/<str:deviceName>', acquire_data, name='acquire_data'),
     path('api/graph-json/<str:graphId>', graph_json_view, name='graph_json_view'), # graphId is a string parameter passed along the url
     path('config/<str:filename>.json', send_settings, name='send_settings'), # Filename is a string parameter passed along the url

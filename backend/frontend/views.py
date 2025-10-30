@@ -19,7 +19,8 @@ def index(request):
 
 @api_view(['POST'])
 def start_dischage(request):
-    controller.start_discharge()
+    data = request.data
+    controller.start_discharge(data)
     return JsonResponse({'status': 'ok'})
 
 # Data acquisition

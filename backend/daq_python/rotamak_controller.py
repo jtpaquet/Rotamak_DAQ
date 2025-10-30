@@ -2,10 +2,13 @@ import json
 import time
 import serial
 import nidaqmx
+from nidaqmx import Task
 from nidaqmx.system import System
-from nidaqmx.constants import AcquisitionType, Level, TerminalConfiguration, Edge
+from nidaqmx.constants import AcquisitionType, Level, TerminalConfiguration, Edge, LineGrouping
 from pathlib import Path
 from daq_python.daq_acquisition import DAQAcquisition, DEVICE_RANGE
+from daq_python.daq_triggering import TriggerGenerator
+from daq_python.daq_rmf import RMFPulseGenerator
 
 # from triggerGenerator import triggerGenerator
 
@@ -16,6 +19,7 @@ class RotamakController:
         self.system = System.local()
         self.daq = self.system
         self.main_clk_task = None
+        self.discharge_task = None
         self.rpi = None
         self.rpi_port = None
         self.device_names = [d.name for d in self.daq.devices]
@@ -29,7 +33,7 @@ class RotamakController:
     def reset_daq_tasks(self):
         """Close all tasks created by the NI DAQ Assistant to prevent conflicts."""
         for task in self.daq.tasks:
-            # print(f"Found task: {task.name}, Author: {task.author}")
+            print(f"Found task: {task.name}, Author: {task.author}")
             if task.author == 'DAQ assistant':
                 print(f"Closing DAQ assistant task: {task.name}")
                 try:
@@ -40,7 +44,6 @@ class RotamakController:
 
     def setup(self):
         self.initialize_main_clock()
-        self.initialize_triggers()
         self.connect_rpi()
         pass
 
@@ -52,7 +55,7 @@ class RotamakController:
 
     def initialize_main_clock(self):
         """Initialize main DAQ clock."""
-        freq_hz = 10e3  # default to 10 kHz
+        freq_hz = 1000e3  # default to 1 MHz
         self.main_clk_task = nidaqmx.Task(new_task_name='mainClkTask')
         self.main_clk_task.co_channels.add_co_pulse_chan_freq(
             'PXI1Slot5/Ctr1', idle_state=Level.LOW, freq=freq_hz
@@ -60,11 +63,6 @@ class RotamakController:
         self.main_clk_task.timing.cfg_implicit_timing(sample_mode=AcquisitionType.CONTINUOUS)
         self.main_clk_task.start()
         print(f"Main clock initialized at {freq_hz/1e3:.1f} kHz")
-
-    def initialize_triggers(self):
-        """Set up trigger controller."""
-        # self.triggers = triggerGenerator(frame=None, daq=self.daq, clkTask=self.main_clk_task)
-        print("Trigger controller initialized")
 
     def connect_rpi(self):
         import serial.tools.list_ports
@@ -188,8 +186,78 @@ class RotamakController:
         response = self.rpi.readlines()
         print(f"RPi response to '{cmd}':", response)
         return response
+    
+    def start_discharge(self, data):
+        # Setup
+        self.setup_discharge(data)
 
-    def start_discharge(self):
+        # Start the shared DO task
+        self.combined_task.start()
+        print("🚀 Combined RMF + triggers started.")
+
+        # Wait for completion
+        self.combined_task.wait_until_done()
+        self.combined_task.stop()
+        self.combined_task.close()
+        self.combined_task = None
+        print("✅ Combined output completed.")
+        pass
+
+    def setup_discharge(self, data):
+        # Setup triggers (generate waveforms only)
+        self.triggers = TriggerGenerator(daq=self.system, clk_task=self.main_clk_task)
+        self.triggers.configure_from_dict(data)
+        
+        # Setup RMF (generate waveforms only)
+        self.rmfPulses = RMFPulseGenerator(daq=self.system, clk_task=self.main_clk_task)
+        self.rmfPulses.generate_waveforms(data)
+
+        self.setup_discharge_task()
+        self.write_discharge_pulses()
+        self.configure_discharge_timing()
+        self.combined_task.write(self.combined_data, auto_start=False)
+        pass
+
+    def setup_discharge_task(self):
+        # Setup combined triggers and waveforms task
+        self.combined_task = Task(new_task_name='Combined_DO')
+        module = self.main_clk_task.devices[0]
+        do_lines = module.do_lines
+        ch_names = [d.name for d in do_lines[:8]] # Use all lines (port0/line0:7), first 4 for triggers, last 4 for RMF
+        self.combined_channels = ch_names
+        self.combined_task.do_channels.add_do_chan(','.join(ch_names),
+                                               line_grouping=LineGrouping.CHAN_PER_LINE)
+        # print(f"Channels: {[ch.name for ch in list(self.combined_task.do_channels)]}")
+
+    def write_discharge_pulses(self):
+        combined_data = [[] for i in range(8)]
+        combined_len = len(self.triggers.data_list[0])
+        for i in range(4):
+            combined_data[i] = self.triggers.data_list[i]
+        for i in range(4,8):
+            rmf_waveform = self.rmfPulses.data_list[i-4]
+            new_rmf_waveform = rmf_waveform * (combined_len//len(rmf_waveform)+1)
+            new_rmf_waveform = new_rmf_waveform[:combined_len]
+            combined_data[i] = new_rmf_waveform
+        for w in combined_data:
+            w[-100:] = [0] * 100
+        self.combined_data = combined_data
+        pass
+
+    def configure_discharge_timing(self):
+        # Configure timing
+        clk_rate = self.main_clk_task.co_channels[0].co_pulse_freq
+        clk_channel = self.main_clk_task.co_channels[0].name
+        combined_len = len(self.combined_data[0])
+
+        self.combined_task.timing.cfg_samp_clk_timing(
+            rate=clk_rate,
+            source=f'/{clk_channel}InternalOutput',
+            sample_mode=AcquisitionType.FINITE,
+            samps_per_chan=combined_len
+        )
+
+    def start_discharge_RPI(self):
         """Start the discharge sequence."""
         # Send waveform params to RPi
         rmf_freq = float(self.config['raspberryPi']['rmfFreq']) * 1e3
