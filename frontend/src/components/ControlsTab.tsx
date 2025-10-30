@@ -39,7 +39,7 @@ export function ControlsTab() {
   const [rmfFreq, setRmfFreq] = useState(100);
   const [dutyCycle1, setDutyCycle1] = useState(25);
   const [dutyCycle2, setDutyCycle2] = useState(25);
-  
+
   // File Handle states
   const formatDateTime = () => {
     const now = new Date();
@@ -47,13 +47,13 @@ export function ControlsTab() {
     const time = now.toTimeString().split(' ')[0]; // HH:MM:SS
     return `${date} - ${time}`;
   };
-  
+
   const [date, setDate] = useState(formatDateTime());
   const [shotNumber, setShotNumber] = useState<number | undefined>(undefined);
   const [fileName, setFileName] = useState("");
   const [fileAppend, setFileAppend] = useState("");
   const [saveDirectory, setSaveDirectory] = useState("");
-  
+
   // Shot Info states
   const [gas, setGas] = useState("");
   const [pressure, setPressure] = useState<number | undefined>(undefined);
@@ -64,9 +64,61 @@ export function ControlsTab() {
     return <div>Loading configuration...</div>;
   }
 
-  const handleDischarge = () => {
+  const enableTotal = enableDuration + enableDelay;
+  function clampToEnable(totalEnable: number, duration: number, delay: number) {
+    if (duration + delay > totalEnable) {
+      // Reduce duration first to fit within total
+      const newDuration = Math.max(0, totalEnable - delay);
+      return newDuration;
+    }
+    return duration;
+  }
+
+
+  const handleDischarge = async () => {
+    const daqControlData: DAQControlData = {
+      triggers: {
+        enable: { duration: enableDuration, delay: enableDelay },
+        dcField: { duration: dcDuration, delay: dcDelay },
+        rmfField: { duration: rmfDuration, delay: rmfDelay },
+        extra: { duration: extraDuration, delay: extraDelay },
+      },
+      raspberryPi: {
+        rmfFreq,
+        dutyCycle1,
+        dutyCycle2,
+      },
+      fileHandle: {
+        date,
+        shotNumber,
+        fileName,
+        fileAppend,
+        saveDirectory,
+        saveData,
+      },
+      shotInfo: {
+        gas,
+        pressure,
+        rfPower,
+        batteryVoltage,
+      },
+    };
     setIsDischarging(true);
     setTimeout(() => setIsDischarging(false), 1000);
+
+    try {
+      // Send data to backend API endpoint
+      await fetch('/api/daq-discharge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(daqControlData),
+      });
+      console.log('DAQ Control data sent:', daqControlData);
+    } catch (error) {
+      console.error('Failed to send DAQ control data:', error);
+    }
   };
 
   const handleSendData = async () => {
@@ -124,7 +176,7 @@ export function ControlsTab() {
         >
           {/* Glow effect */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-400/0 via-amber-400/20 to-amber-400/0 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-          
+
           {/* Pulse animation when discharging */}
           {isDischarging && (
             <>
@@ -132,7 +184,7 @@ export function ControlsTab() {
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/50 to-transparent animate-pulse"></div>
             </>
           )}
-          
+
           {/* Content */}
           <div className="relative flex items-center gap-3">
             <Zap className={`h-6 w-6 ${isDischarging ? 'animate-bounce' : ''}`} />
@@ -146,7 +198,7 @@ export function ControlsTab() {
 
       {/* Send Settings Button */}
       <div className="flex justify-start">
-        <Button 
+        <Button
           onClick={handleSendData}
           className="px-8 py-6 bg-blue-600 hover:bg-blue-700 text-white"
         >
@@ -228,7 +280,10 @@ export function ControlsTab() {
               <div>
                 <NumberInput
                   value={dcDuration}
-                  onChange={setDcDuration}
+                  onChange={(value) => {
+                    const newDuration = clampToEnable(enableTotal, value, dcDelay);
+                    setDcDuration(newDuration);
+                  }}
                   min={config.triggers.dcField.duration.min}
                   max={config.triggers.dcField.duration.max}
                   step={config.triggers.dcField.duration.step}
@@ -239,7 +294,11 @@ export function ControlsTab() {
               <div>
                 <NumberInput
                   value={dcDelay}
-                  onChange={setDcDelay}
+                  onChange={(value) => {
+                    const newDuration = clampToEnable(enableTotal, dcDuration, value);
+                    setDcDelay(value);
+                    setDcDuration(newDuration);
+                  }}
                   min={config.triggers.dcField.delay.min}
                   max={config.triggers.dcField.delay.max}
                   step={config.triggers.dcField.delay.step}
@@ -270,7 +329,10 @@ export function ControlsTab() {
               <div>
                 <NumberInput
                   value={rmfDuration}
-                  onChange={setRmfDuration}
+                  onChange={(value) => {
+                    const newDuration = clampToEnable(enableTotal, value, rmfDelay);
+                    setRmfDuration(newDuration);
+                  }}
                   min={config.triggers.rmfField.duration.min}
                   max={config.triggers.rmfField.duration.max}
                   step={config.triggers.rmfField.duration.step}
@@ -281,7 +343,11 @@ export function ControlsTab() {
               <div>
                 <NumberInput
                   value={rmfDelay}
-                  onChange={setRmfDelay}
+                  onChange={(value) => {
+                    const newDuration = clampToEnable(enableTotal, rmfDuration, value);
+                    setRmfDelay(value);
+                    setRmfDuration(newDuration);
+                  }}
                   min={config.triggers.rmfField.delay.min}
                   max={config.triggers.rmfField.delay.max}
                   step={config.triggers.rmfField.delay.step}
@@ -312,7 +378,10 @@ export function ControlsTab() {
               <div>
                 <NumberInput
                   value={extraDuration}
-                  onChange={setExtraDuration}
+                  onChange={(value) => {
+                    const newDuration = clampToEnable(enableTotal, value, extraDelay);
+                    setExtraDuration(newDuration);
+                  }}
                   min={config.triggers.extra.duration.min}
                   max={config.triggers.extra.duration.max}
                   step={config.triggers.extra.duration.step}
@@ -371,16 +440,16 @@ export function ControlsTab() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Date</Label>
-              <Input 
-                type="text" 
+              <Input
+                type="text"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>Shot #</Label>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 value={shotNumber ?? ""}
                 onChange={(e) => setShotNumber(e.target.value ? Number(e.target.value) : undefined)}
                 placeholder="Shot number"
@@ -388,29 +457,29 @@ export function ControlsTab() {
             </div>
             <div className="space-y-2">
               <Label>File Name</Label>
-              <Input 
-                type="text" 
+              <Input
+                type="text"
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
-                placeholder="Enter file name" 
+                placeholder="Enter file name"
               />
             </div>
             <div className="space-y-2">
               <Label>File Append</Label>
-              <Input 
-                type="text" 
+              <Input
+                type="text"
                 value={fileAppend}
                 onChange={(e) => setFileAppend(e.target.value)}
-                placeholder="Append text" 
+                placeholder="Append text"
               />
             </div>
             <div className="space-y-2">
               <Label>Save Directory</Label>
-              <Input 
-                type="text" 
+              <Input
+                type="text"
                 value={saveDirectory}
                 onChange={(e) => setSaveDirectory(e.target.value)}
-                placeholder="C:/Data/" 
+                placeholder="C:/Data/"
               />
             </div>
             <div className="flex items-center space-x-2 pt-2">
@@ -516,35 +585,35 @@ export function ControlsTab() {
             </div>
             <div className="space-y-2">
               <Label>Pressure (mTorr)</Label>
-              <Input 
-                type="number" 
-                step="0.1" 
+              <Input
+                type="number"
+                step="0.1"
                 value={pressure ?? ""}
                 onChange={(e) => setPressure(e.target.value ? Number(e.target.value) : undefined)}
-                placeholder="mTorr" 
-                className="placeholder:text-muted-foreground" 
+                placeholder="mTorr"
+                className="placeholder:text-muted-foreground"
               />
             </div>
             <div className="space-y-2">
               <Label>RF Power (W)</Label>
-              <Input 
-                type="number" 
-                step="0.1" 
+              <Input
+                type="number"
+                step="0.1"
                 value={rfPower ?? ""}
                 onChange={(e) => setRfPower(e.target.value ? Number(e.target.value) : undefined)}
-                placeholder="W" 
-                className="placeholder:text-muted-foreground" 
+                placeholder="W"
+                className="placeholder:text-muted-foreground"
               />
             </div>
             <div className="space-y-2">
               <Label>Battery Voltage (V)</Label>
-              <Input 
-                type="number" 
-                step="0.1" 
+              <Input
+                type="number"
+                step="0.1"
                 value={batteryVoltage ?? ""}
                 onChange={(e) => setBatteryVoltage(e.target.value ? Number(e.target.value) : undefined)}
-                placeholder="V" 
-                className="placeholder:text-muted-foreground" 
+                placeholder="V"
+                className="placeholder:text-muted-foreground"
               />
             </div>
           </CardContent>

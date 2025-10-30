@@ -66,13 +66,13 @@ const defaultConfig: Config = {
       duration: {
         min: 0,
         max: 500,
-        step: 5,
+        step: 1,
         default: 100
       },
       delay: {
         min: 0,
         max: 500,
-        step: 5,
+        step: 1,
         default: 0
       }
     },
@@ -80,13 +80,13 @@ const defaultConfig: Config = {
       duration: {
         min: 0,
         max: 500,
-        step: 5,
+        step: 1,
         default: 100
       },
       delay: {
         min: 0,
         max: 500,
-        step: 5,
+        step: 1,
         default: 10
       }
     },
@@ -94,13 +94,13 @@ const defaultConfig: Config = {
       duration: {
         min: 0,
         max: 500,
-        step: 5,
+        step: 1,
         default: 100
       },
       delay: {
         min: 0,
         max: 500,
-        step: 5,
+        step: 1,
         default: 10
       }
     },
@@ -108,13 +108,13 @@ const defaultConfig: Config = {
       duration: {
         min: 0,
         max: 500,
-        step: 5,
+        step: 1,
         default: 100
       },
       delay: {
         min: 0,
         max: 500,
-        step: 5,
+        step: 1,
         default: 10
       }
     }
@@ -130,7 +130,7 @@ const defaultConfig: Config = {
     dutyCycle: {
       min: 0,
       max: 50,
-      step: 1,
+      step: 0.5,
       decimals: 1,
       default: 25
     }
