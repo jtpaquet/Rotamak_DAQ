@@ -8,20 +8,52 @@ class TriggerGenerator:
     Reads timing info from a dict and generates digital triggers on NI-DAQ lines.
     """
 
-    def __init__(self, daq: System, clk_task: Task):
+    def __init__(self, daq: System, timing_task: Task):
         self.daq = daq
-        self.clk_task = clk_task
-        self.module = self.clk_task.devices[0]  # same module as clock
-        self.trig_task = None
+        self.module = timing_task.devices[0]  # same module as clock
+        self.timing_task = timing_task
+        self.trigger_task = None
 
         # Clock info
-        self.clk_rate = self.clk_task.co_channels[0].co_pulse_freq  # Hz
-        self.clk_channel = self.clk_task.co_channels[0].name
+        self.clk_rate = self.timing_task.co_channels[0].co_pulse_freq
 
         # Internal vars
-        self.len_buffer = 120_000
+        self.max_len_buffer = 500_000
         self.data_list = []
         self.channel_list = []
+
+
+    def setup_trigger_task(self):
+        self.trigger_task = Task(new_task_name='Trigger_Task')
+        self.define_channels()
+        self.define_timing()
+        
+    def define_channels(self, num_lines=4):
+        """
+        Automatically picks the last few digital lines from the module.
+        """
+        do_lines = self.module.do_lines
+        ch_names = [d.name for d in do_lines[:num_lines]]  # first 4 lines
+        self.channel_list = ch_names
+        self.trigger_task.do_channels.add_do_chan(','.join(ch_names),
+                                               line_grouping=LineGrouping.CHAN_PER_LINE)
+        print(f"Channels: {[ch.name for ch in list(self.trigger_task.do_channels)]}")
+
+    def define_timing(self):
+        """
+        Configures timing to use the main clock from clk_task.
+        """
+        counter_name = self.timing_task.co_channels[0].name
+        source_channel = f'/{counter_name}InternalOutput'
+
+        print(source_channel)
+        self.trigger_task.timing.cfg_samp_clk_timing(
+            rate=self.clk_rate,
+            source=source_channel,
+            sample_mode=AcquisitionType.FINITE,
+            samps_per_chan=self.len_buffer
+        )
+        print(f"Clock rate: {self.clk_rate/1e3:.1f} kHz")
 
     def configure_from_dict(self, config: dict):
         """
@@ -29,9 +61,9 @@ class TriggerGenerator:
         Example expected format:
             config = {
                 'triggers': {
-                    'enable': {'duration': 100, 'delay': 0},
-                    'dcField': {'duration': 80, 'delay': 10},
-                    'rmfField': {'duration': 60, 'delay': 20},
+                    'enable': {'duration': 200, 'delay': 0},
+                    'dcField': {'duration': 80, 'delay': 60},
+                    'rmfField': {'duration': 40, 'delay': 80},
                     'extra': {'duration': 0, 'delay': 0}
                 }
             }
@@ -63,48 +95,22 @@ class TriggerGenerator:
         total_duration = durations[0]
 
         self.len_buffer = int(N_delay + total_duration * self.clk_rate + N_safety)
-        if self.len_buffer > 120_000:
-            print("Buffer capped at 120000 samples.")
-            self.len_buffer = 120_000
+        if self.len_buffer > self.max_len_buffer:
+            print(f"Buffer capped at {self.max_len_buffer} samples.")
+            self.len_buffer = self.max_len_buffer
 
         data_list = []
         for dt, delay in zip(durations, delays):
             N_delay = int(delay * self.clk_rate)
-            N_on = int(dt * self.clk_rate)
+            N_on = min(self.len_buffer - N_delay - N_safety, int(dt * self.clk_rate))
             N_off = max(0, self.len_buffer - N_delay - N_on - N_safety)
             data = [False]*N_delay + [True]*N_on + [False]*(N_off + N_safety)
             data_list.append(data)
 
         self.data_list = data_list
-
+        print(np.sum(self.data_list[1]))
         print(f"Triggers prepared ({len(data_list)} channels, {self.len_buffer} samples).")
         self._print_waveforms(data_list)
-
-    def setup_task(self):
-        self.trig_task = Task(new_task_name='Trigger_Task')
-
-    def define_channels(self, num_lines=4):
-        """
-        Automatically picks the last few digital lines from the module.
-        """
-        do_lines = self.module.do_lines
-        ch_names = [d.name for d in do_lines[:num_lines]]  # first 4 lines
-        self.channel_list = ch_names
-        self.trig_task.do_channels.add_do_chan(','.join(ch_names),
-                                               line_grouping=LineGrouping.CHAN_PER_LINE)
-        print(f"Channels: {[ch.name for ch in list(self.trig_task.do_channels)]}")
-
-    def define_timing(self):
-        """
-        Configures timing to use the main clock from clk_task.
-        """
-        self.trig_task.timing.cfg_samp_clk_timing(
-            rate=self.clk_rate,
-            source=f'/{self.clk_channel}InternalOutput',
-            sample_mode=AcquisitionType.FINITE,
-            samps_per_chan=self.len_buffer
-        )
-        print(f"Clock rate: {self.clk_rate/1e3:.1f} kHz")
 
     def start_triggers(self):
         """
@@ -112,19 +118,18 @@ class TriggerGenerator:
         """
         if not self.data_list:
             raise ValueError("⚠ No data loaded. Call configure_from_dict() first.")
-        self.trig_task.write(self.data_list, auto_start=False)
-        self.trig_task.start()
+        self.trigger_task.start()
         print("🚀 Triggers started.")
 
     def wait_and_stop(self):
         """
         Wait until done, then stop and reset the trigger task.
         """
-        self.trig_task.wait_until_done()
+        self.trigger_task.wait_until_done()
         print("✅ Triggers completed.")
-        self.trig_task.stop()
-        self.trig_task.close()
-        self.trig_task = None  # reinit
+        self.trigger_task.stop()
+        self.trigger_task.close()
+        self.trigger_task = None  # reinit
     
     def _print_waveforms(self, waveforms, width=100):
         """
@@ -140,3 +145,17 @@ class TriggerGenerator:
             line = ''.join('█' if x else ' ' for x in reduced)
             print(f"Ch{i+1:02d} | {line} |")
         print()
+
+
+if __name__ == '__main__':
+    daq = System.local()
+    import nidaqmx
+    rmf_clk_task = nidaqmx.Task(new_task_name='rmfClkTask')
+    rmf_clk_task.co_channels.add_co_pulse_chan_freq(
+        'PXI1Slot5/Ctr0', idle_state=nidaqmx.constants.Level.LOW, freq=200e3, duty_cycle=0.5
+    )
+    rmf_clk_task.timing.cfg_implicit_timing(sample_mode=AcquisitionType.CONTINUOUS)
+    rmf_clk_task.start()
+
+    t = TriggerGenerator(daq=daq, rmf_clk_task=rmf_clk_task)
+    t.start_triggers()

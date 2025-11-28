@@ -62,8 +62,8 @@ def graph_json_view(request, graphId):
 def receive_controls(request):
     data = request.data  # automatically parses json
     control_config_path = settings.BASE_DIR / 'config' / 'daq_controls.json'
+    controller.update_parameters()
     print(control_config_path)
-    print(data)
 
     try:
         with open(control_config_path, 'w') as f:
