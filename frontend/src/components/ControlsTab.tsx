@@ -26,19 +26,19 @@ export function ControlsTab() {
   const configContext = useContext(ConfigContext);
   const config = configContext?.config;
 
-  const [enableDuration, setEnableDuration] = useState(100);
+  const [enableDuration, setEnableDuration] = useState(200);
   const [enableDelay, setEnableDelay] = useState(0);
   const [dcDuration, setDcDuration] = useState(80);
-  const [dcDelay, setDcDelay] = useState(10);
-  const [rmfDuration, setRmfDuration] = useState(60);
-  const [rmfDelay, setRmfDelay] = useState(20);
+  const [dcDelay, setDcDelay] = useState(60);
+  const [rmfDuration, setRmfDuration] = useState(40);
+  const [rmfDelay, setRmfDelay] = useState(80);
   const [extraDuration, setExtraDuration] = useState(0);
   const [extraDelay, setExtraDelay] = useState(0);
   const [saveData, setSaveData] = useState(true);
   const [isDischarging, setIsDischarging] = useState(false);
-  const [rmfFreq, setRmfFreq] = useState(100);
-  const [dutyCycle1, setDutyCycle1] = useState(25);
-  const [dutyCycle2, setDutyCycle2] = useState(25);
+  const [rmfFreq, setRmfFreq] = useState(125);
+  const [dutyCycle1, setDutyCycle1] = useState(35);
+  const [dutyCycle2, setDutyCycle2] = useState(35);
 
   // File Handle states
   const formatDateTime = () => {
@@ -500,21 +500,21 @@ export function ControlsTab() {
         {/* Raspberry Pi Controls - Bottom Left */}
         <Card>
           <CardHeader>
-            <CardTitle>Raspberry Pi Controls</CardTitle>
+            <CardTitle>RMF Controls</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Port Selection</Label>
-                <Select defaultValue="port1">
+                <Select defaultValue="Func_gen">
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="port1">Port 1</SelectItem>
-                    <SelectItem value="port2">Port 2</SelectItem>
-                    <SelectItem value="port3">Port 3</SelectItem>
-                    <SelectItem value="port4">Port 4</SelectItem>
+                    <SelectItem value="Func_gen">Function generator</SelectItem>
+                    <SelectItem value="DAQ_ctr_output">DAQ counter output (PXI1Slot5/Ctr0)</SelectItem>
+                    <SelectItem value="DAQ_digital_output">DAQ digital output (N/A)</SelectItem>
+                    {/* <SelectItem value="port4">Port 4</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>

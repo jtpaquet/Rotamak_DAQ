@@ -66,13 +66,13 @@ const defaultConfig: Config = {
       duration: {
         min: 0,
         max: 500,
-        step: 1,
-        default: 100
+        step: 5,
+        default: 200
       },
       delay: {
         min: 0,
         max: 500,
-        step: 1,
+        step: 5,
         default: 0
       }
     },
@@ -80,58 +80,58 @@ const defaultConfig: Config = {
       duration: {
         min: 0,
         max: 500,
-        step: 1,
-        default: 100
+        step: 5,
+        default: 60
       },
       delay: {
         min: 0,
         max: 500,
-        step: 1,
-        default: 10
+        step: 5,
+        default: 80
       }
     },
     rmfField: {
       duration: {
         min: 0,
         max: 500,
-        step: 1,
-        default: 100
+        step: 5,
+        default: 40
       },
       delay: {
         min: 0,
         max: 500,
-        step: 1,
-        default: 10
+        step: 5,
+        default: 80
       }
     },
     extra: {
       duration: {
         min: 0,
         max: 500,
-        step: 1,
+        step: 5,
         default: 100
       },
       delay: {
         min: 0,
         max: 500,
-        step: 1,
-        default: 10
+        step: 5,
+        default: 80
       }
     }
   },
   raspberryPi: {
     rmfFreq: {
-      min: 0,
-      max: 1000,
-      step: 0.01,
-      decimals: 2,
-      default: 100
-    },
-    dutyCycle: {
-      min: 0,
-      max: 50,
+      min: 1,
+      max: 2500,
       step: 0.5,
       decimals: 1,
+      default: 125
+    },
+    dutyCycle: {
+      min: 15,
+      max: 85,
+      step: 1,
+      decimals: 0,
       default: 25
     }
   },
