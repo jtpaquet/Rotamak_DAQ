@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -23,8 +23,42 @@ import { ConfigContext } from "../App";
 import { DAQControlData } from "../types/daq-control-data";
 
 export function ControlsTab() {
-  const configContext = useContext(ConfigContext);
-  const config = configContext?.config;
+  // const configContext = useContext(ConfigContext);
+  // const config = configContext?.config;
+  // Replaced 2025-12-09
+  const { config, pxiPayloads, setPxiPayloads } = useContext(ConfigContext)!;
+
+  useEffect(() => {
+    const requestData = [];   // backend expects an array
+    fetch("/api/daq-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestData),
+    })
+      .then(r => r.json())
+      .then(data => {
+        console.log("PXI preload response:", data);
+
+      // Check if 'data' is an object and contains 'pxi' (an array)
+      if (!data || !Array.isArray(data.pxi)) {
+        console.error("PXI preload returned unexpected structure:", data);
+        return;
+      }
+
+      // Convert the pxi array → dictionary
+      const dict: any = {};
+      for (const slot of data.pxi) {
+        if (slot?.deviceName) {
+          dict[slot.deviceName] = slot;
+        }
+      }
+
+      // Update state with the constructed dictionary
+      setPxiPayloads(dict);
+    })
+    .catch(err => console.error("PXI preload error:", err));
+  }, []);
+
 
   const [enableDuration, setEnableDuration] = useState(200);
   const [enableDelay, setEnableDelay] = useState(0);
@@ -36,9 +70,9 @@ export function ControlsTab() {
   const [extraDelay, setExtraDelay] = useState(0);
   const [saveData, setSaveData] = useState(true);
   const [isDischarging, setIsDischarging] = useState(false);
-  const [rmfFreq, setRmfFreq] = useState(125);
-  const [dutyCycle1, setDutyCycle1] = useState(35);
-  const [dutyCycle2, setDutyCycle2] = useState(35);
+  const [rmfFreq, setRmfFreq] = useState(143);
+  const [dutyCycle1, setDutyCycle1] = useState(40);
+  const [dutyCycle2, setDutyCycle2] = useState(40);
 
   // File Handle states
   const formatDateTime = () => {
@@ -103,6 +137,15 @@ export function ControlsTab() {
         batteryVoltage,
       },
     };
+      
+    // Added 2025-12-09 the PXI acquisition payload
+    const pxiData = Object.values(pxiPayloads).filter(Boolean);
+
+    const payload = {
+      control: daqControlData,
+      pxi: pxiData,
+    };
+
     setIsDischarging(true);
     setTimeout(() => setIsDischarging(false), 1000);
 
@@ -113,9 +156,9 @@ export function ControlsTab() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(daqControlData),
+        body: JSON.stringify(payload),
       });
-      console.log('DAQ Control data sent:', daqControlData);
+      console.log('DAQ Control data sent:', payload);
     } catch (error) {
       console.error('Failed to send DAQ control data:', error);
     }
@@ -149,6 +192,14 @@ export function ControlsTab() {
         batteryVoltage,
       },
     };
+      
+    // Added 2025-12-09 the PXI acquisition payload
+    const pxiData = Object.values(pxiPayloads).filter(Boolean);
+
+    const payload = {
+      control: daqControlData,
+      pxi: pxiData,
+    };
 
     try {
       // Send data to backend API endpoint
@@ -157,9 +208,9 @@ export function ControlsTab() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(daqControlData),
+        body: JSON.stringify(payload),
       });
-      console.log('DAQ Control data sent:', daqControlData);
+      console.log('DAQ Control data sent:', payload);
     } catch (error) {
       console.error('Failed to send DAQ control data:', error);
     }

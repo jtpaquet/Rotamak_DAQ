@@ -21,6 +21,8 @@ export const ConfigContext = createContext<{
   saveConfig: (config: Config) => void;
   loadDefaultSettings: () => Promise<Config>;
   loadUserSettings: () => Promise<Config>;
+  pxiPayloads: Record<string, any>;
+  setPxiPayloads: React.Dispatch<React.SetStateAction<Record<string, any>>>;
 } | null>(null);
 
 export default function App() {
@@ -28,6 +30,47 @@ export default function App() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const { config, setConfig, saveConfig, loadDefaultSettings, loadUserSettings } = useConfig();
+
+  // Added 2025-12-09
+  const initialPXI = {
+    PXI1Slot5: {
+      deviceName: "PXI1Slot5",
+      sampleRate: config.pxi.sampleRate.default,
+      totalSamples: config.pxi.totalSamples.default,
+      acquisitionTime: config.pxi.acquisitionTime.default,
+      channels: config.pxi.pxi1.channelNames.map(id => ({
+        id,
+        name: id,
+        range: "± 10 V",
+        save: true,
+      })),
+    },
+    PXI1Slot6: {
+      deviceName: "PXI1Slot6",
+      sampleRate: config.pxi.sampleRate.default,
+      totalSamples: config.pxi.totalSamples.default,
+      acquisitionTime: config.pxi.acquisitionTime.default,
+      channels: config.pxi.pxi2.channelNames.map(id => ({
+        id,
+        name: id,
+        range: "± 10 V",
+        save: true,
+      })),
+    },
+    PXI1Slot7: {
+      deviceName: "PXI1Slot7",
+      sampleRate: config.pxi.sampleRate.default,
+      totalSamples: config.pxi.totalSamples.default,
+      acquisitionTime: config.pxi.acquisitionTime.default,
+      channels: config.pxi.pxi3.channelNames.map(id => ({
+        id,
+        name: id,
+        range: "± 10 V",
+        save: true,
+      })),
+    },
+  };
+  const [pxiPayloads, setPxiPayloads] = useState(initialPXI);
 
   useEffect(() => {
     // Apply dark mode class to document
@@ -47,7 +90,17 @@ export default function App() {
   ];
 
   return (
-    <ConfigContext.Provider value={{ config, setConfig, saveConfig, loadDefaultSettings, loadUserSettings }}>
+    <ConfigContext.Provider 
+      value={{
+        config,
+        setConfig,
+        saveConfig,
+        loadDefaultSettings,
+        loadUserSettings,
+        pxiPayloads,       // ⭐ shared PXI payloads
+        setPxiPayloads,    // ⭐ setter for PXI payloads
+      }}
+    >
       <div className="h-screen bg-background flex overflow-hidden">
         {/* Sidebar */}
         <div

@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -110,7 +110,9 @@ function PXISlot({
     if (onPayloadChange) {
       onPayloadChange(currentPayload);
     }
-  }, [samplingRate, totalSamples, deltaT, channelNames, channelRanges, channelSaveStates, deviceName, channels, onPayloadChange]);
+  // }, [samplingRate, totalSamples, deltaT, channelNames, channelRanges, channelSaveStates, deviceName, channels, onPayloadChange]);
+  // Replaced 2025-12-09
+  }, [samplingRate, totalSamples, deltaT, channelNames, channelRanges, channelSaveStates, deviceName, onPayloadChange]);
 
 
   const acquireData = async () => {
@@ -377,23 +379,41 @@ export function DAQTab() {
     return <div>Loading configuration...</div>;
   }
 
-  const pxi5Channels = config.pxi.pxi1.channelNames.map((name, index) => ({
-    id: name,
-    name: `${name}`
-  }));
+  // const pxi5Channels = config.pxi.pxi1.channelNames.map((name, index) => ({
+  //   id: name,
+  //   name: `${name}`
+  // }));
 
-  const pxi6Channels = config.pxi.pxi2.channelNames.map((name, index) => ({
-    id: name,
-    name: `${name}`
-  }));
+  // const pxi6Channels = config.pxi.pxi2.channelNames.map((name, index) => ({
+  //   id: name,
+  //   name: `${name}`
+  // }));
 
-  const pxi7Channels = config.pxi.pxi3.channelNames.map((name, index) => ({
-    id: name,
-    name: `${name}`
-  }));
+  // const pxi7Channels = config.pxi.pxi3.channelNames.map((name, index) => ({
+  //   id: name,
+  //   name: `${name}`
+  // }));
 
+  // Replaced 2025-12-09
+  const pxi5Channels = useMemo(
+    () => config.pxi.pxi1.channelNames.map((name) => ({ id: name, name })),
+    [config.pxi.pxi1.channelNames]
+  );
 
-  const [pxiPayloads, setPxiPayloads] = useState<Record<string, any>>({});
+  const pxi6Channels = useMemo(
+    () => config.pxi.pxi2.channelNames.map((name) => ({ id: name, name })),
+    [config.pxi.pxi2.channelNames]
+  );
+
+  const pxi7Channels = useMemo(
+    () => config.pxi.pxi3.channelNames.map((name) => ({ id: name, name })),
+    [config.pxi.pxi3.channelNames]
+  );
+
+  // const [pxiPayloads, setPxiPayloads] = useState<Record<string, any>>({});
+  // Replaced 2015-12-09
+  const { pxiPayloads, setPxiPayloads } = useContext(ConfigContext)!;
+
 
   const handleSlotPayloadChange = (deviceName: string) => (payload: any) => {
     setPxiPayloads((prev) => ({ ...prev, [deviceName]: payload }));
@@ -425,6 +445,10 @@ export function DAQTab() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    console.log("PXI CONTEXT =", pxiPayloads);
+  }, [pxiPayloads]);
 
   return (
 

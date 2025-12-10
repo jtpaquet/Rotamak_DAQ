@@ -128,11 +128,11 @@ const defaultConfig: Config = {
       default: 125
     },
     dutyCycle: {
-      min: 15,
-      max: 85,
+      min: 10,
+      max: 90,
       step: 1,
       decimals: 0,
-      default: 25
+      default: 40
     }
   },
   pxi: {
