@@ -162,6 +162,37 @@ class FunctionGenerator:
         encoded = self._encode_hex(code, digits=2)
         self._send(f'/DC{encoded}')
         
+    def get_duty_cycle(self) -> float:
+        duty_max = 93.5
+        duty_min = 6.8
+        self._send('/AC')
+        #resp = self.ser.read_until(b'.')
+        time.sleep(DT)
+        # Read everything currently in the input buffer
+        buffer = self.ser.read_all()
+        messages = buffer.split(b'.')
+        
+        # Remove empty entries and reattach trailing '.' to each message
+        messages = [m + b'.' for m in messages if m]
+        
+        if not messages:
+            raise RuntimeError("No response received")
+        
+        # Only consider the last full message
+        last_msg = messages[-1]
+        #print("Last message received:", last_msg)
+    
+        if not last_msg.startswith(b'/AC') or not last_msg.endswith(b'.'):
+            raise ValueError(f"Unexpected response: {last_msg}")
+        
+        resp = last_msg.decode()
+        body = self._decode_hex(resp[3:-1]) # this is hex
+
+        value = int(body, 16)
+        duty = duty_max - (value / 255) * (duty_max - duty_min)
+        return round(duty, 1)
+    
+        
     def set_cmos_level(self, voltage: float):
         """
         Set the CMOS level output voltage.

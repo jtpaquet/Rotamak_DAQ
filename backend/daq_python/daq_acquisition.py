@@ -64,6 +64,9 @@ class DAQAcquisition:
         self.acquire_task.close()
         self.acquire_task = None
         formatted_data = self.format_daq_data(data)
+
+        for k,d in formatted_data.items():
+            print(k, d[:5])
         return formatted_data
     
     

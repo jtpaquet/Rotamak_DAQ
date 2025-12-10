@@ -19,13 +19,18 @@ def index(request):
 
 @api_view(['POST'])
 def start_dischage(request):
+    print('START DISCHARGE')
     data = request.data
-    controller.start_discharge(data)
-    return JsonResponse({'status': 'ok'})
+    try:
+        controller.start_discharge(data)
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return Response({"success": False, "error": str(e)}, status=500)
 
 # Data acquisition
 @api_view(['POST'])
 def start_data_acquisition(request):
+    print(request.data)
     try:
         controller.load_config()  # Load updated config (if needed)
         print("[DAQ] Starting data acquisition...")
@@ -62,12 +67,11 @@ def graph_json_view(request, graphId):
 def receive_controls(request):
     data = request.data  # automatically parses json
     control_config_path = settings.BASE_DIR / 'config' / 'daq_controls.json'
-    controller.update_parameters()
-    print(control_config_path)
-
     try:
         with open(control_config_path, 'w') as f:
             json.dump(data, f, indent=2)
+        controller.update_parameters()
+        print(control_config_path)
         return JsonResponse({"success": True, "message": "Configuration saved successfully"})
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
@@ -75,7 +79,16 @@ def receive_controls(request):
         return JsonResponse({"error": "Permission denied to write configuration"}, status=403)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+@api_view(['POST'])
+def get_pxi_config(request):
+    try:
+        config = controller.get_pxi_default_config()  # implement this
+        print("Views.py: get_pxi_config")
+        print(config)
+        return JsonResponse(config, safe=False)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 @api_view(['POST'])
 def acquire_data(request, deviceName):
@@ -90,19 +103,20 @@ def acquire_data(request, deviceName):
             print("Exception in acquire_data_view:")
             traceback.print_exc() 
             return JsonResponse({"error": str(e)}, status=500)
-    try:
-        data = request.data  # automatically parses json
-        controller.acquire_data(data)
-        return JsonResponse({"success": True, "message": "Configuration saved successfully"})
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-    except PermissionError:
-        return JsonResponse({"error": "Permission denied to write configuration"}, status=403)
-    except Exception as e:
-        import traceback
-        print("Exception in acquire_data_view:")
-        traceback.print_exc() 
-        return JsonResponse({"error": str(e)}, status=500)
+    else:
+        try:
+            data = request.data  # automatically parses json
+            controller.acquire_data(data)
+            return JsonResponse({"success": True, "message": "Configuration saved successfully"})
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+        except PermissionError:
+            return JsonResponse({"error": "Permission denied to write configuration"}, status=403)
+        except Exception as e:
+            import traceback
+            print("Exception in acquire_data_view:")
+            traceback.print_exc() 
+            return JsonResponse({"error": str(e)}, status=500)
 
 # The frontend (client) is POSTING the data, the backend (django) receives the data
 @api_view(['POST'])

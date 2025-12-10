@@ -68,6 +68,7 @@ class TriggerGenerator:
                 }
             }
         """
+        config = config['control']
         trig_order = ['enable', 'dcField', 'rmfField', 'extra']
         durations = []
         delays = []
@@ -108,13 +109,12 @@ class TriggerGenerator:
             data_list.append(data)
 
         self.data_list = data_list
-        print(np.sum(self.data_list[1]))
         print(f"Triggers prepared ({len(data_list)} channels, {self.len_buffer} samples).")
         self._print_waveforms(data_list)
 
     def start_triggers(self):
         """
-        Writes data and starts trigger task.
+        Starts trigger task.
         """
         if not self.data_list:
             raise ValueError("⚠ No data loaded. Call configure_from_dict() first.")
@@ -145,6 +145,10 @@ class TriggerGenerator:
             line = ''.join('█' if x else ' ' for x in reduced)
             print(f"Ch{i+1:02d} | {line} |")
         print()
+
+    def cleanup(self):
+        if self.trigger_task:
+            self.trigger_task.close()
 
 
 if __name__ == '__main__':

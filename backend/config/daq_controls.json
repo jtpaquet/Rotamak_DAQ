@@ -1,35 +1,207 @@
 {
-  "triggers": {
-    "enable": {
-      "duration": 200,
-      "delay": 0
+  "control": {
+    "triggers": {
+      "enable": {
+        "duration": 200,
+        "delay": 0
+      },
+      "dcField": {
+        "duration": 80,
+        "delay": 60
+      },
+      "rmfField": {
+        "duration": 40,
+        "delay": 80
+      },
+      "extra": {
+        "duration": 0,
+        "delay": 0
+      }
     },
-    "dcField": {
-      "duration": 80,
-      "delay": 60
+    "raspberryPi": {
+      "rmfFreq": 143,
+      "dutyCycle1": 40,
+      "dutyCycle2": 40
     },
-    "rmfField": {
-      "duration": 40,
-      "delay": 80
+    "fileHandle": {
+      "date": "2025-12-10 - 16:51:13",
+      "fileName": "",
+      "fileAppend": "",
+      "saveDirectory": "",
+      "saveData": true
     },
-    "extra": {
-      "duration": 0,
-      "delay": 0
+    "shotInfo": {
+      "gas": ""
     }
   },
-  "raspberryPi": {
-    "rmfFreq": 200,
-    "dutyCycle1": 33,
-    "dutyCycle2": 35
-  },
-  "fileHandle": {
-    "date": "2025-11-28 - 13:37:40",
-    "fileName": "",
-    "fileAppend": "",
-    "saveDirectory": "",
-    "saveData": true
-  },
-  "shotInfo": {
-    "gas": ""
-  }
+  "pxi": [
+    {
+      "deviceName": "PXI1Slot5",
+      "sampleRate": 1000,
+      "totalSamples": 100000,
+      "acquisitionTime": 100,
+      "channels": [
+        {
+          "id": "ai0",
+          "name": "ai0",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai1",
+          "name": "ai1",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai2",
+          "name": "ai2",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai3",
+          "name": "ai3",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai4",
+          "name": "ai4",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai5",
+          "name": "ai5",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai6",
+          "name": "ai6",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai7",
+          "name": "ai7",
+          "range": "\u00b1 10 V",
+          "save": true
+        }
+      ]
+    },
+    {
+      "deviceName": "PXI1Slot6",
+      "sampleRate": 1000,
+      "totalSamples": 100000,
+      "acquisitionTime": 100,
+      "channels": [
+        {
+          "id": "ai0",
+          "name": "ai0",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai1",
+          "name": "ai1",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai2",
+          "name": "ai2",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai3",
+          "name": "ai3",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai4",
+          "name": "ai4",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai5",
+          "name": "ai5",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai6",
+          "name": "ai6",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai7",
+          "name": "ai7",
+          "range": "\u00b1 10 V",
+          "save": true
+        }
+      ]
+    },
+    {
+      "deviceName": "PXI1Slot7",
+      "sampleRate": 1000,
+      "totalSamples": 100000,
+      "acquisitionTime": 100,
+      "channels": [
+        {
+          "id": "ai0",
+          "name": "ai0",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai1",
+          "name": "ai1",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai2",
+          "name": "ai2",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai3",
+          "name": "ai3",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai4",
+          "name": "ai4",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai5",
+          "name": "ai5",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai6",
+          "name": "ai6",
+          "range": "\u00b1 10 V",
+          "save": true
+        },
+        {
+          "id": "ai7",
+          "name": "ai7",
+          "range": "\u00b1 10 V",
+          "save": true
+        }
+      ]
+    }
+  ]
 }

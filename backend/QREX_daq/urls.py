@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from frontend.views import index, receive_controls, receive_settings, send_settings, graph_json_view, start_data_acquisition, acquire_data, start_dischage
+from frontend.views import index, receive_controls, receive_settings, send_settings, graph_json_view, start_data_acquisition, acquire_data, start_dischage, get_pxi_config
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/daq-control', receive_controls, name='receive_controls'),
     path('api/daq-discharge', start_dischage, name='start_dischage'),
     path('api/daq/<str:deviceName>', acquire_data, name='acquire_data'),
+    path('api/daq-config', get_pxi_config, name='get_pxi_config'),
     path('api/graph-json/<str:graphId>', graph_json_view, name='graph_json_view'), # graphId is a string parameter passed along the url
     path('config/<str:filename>.json', send_settings, name='send_settings'), # Filename is a string parameter passed along the url
     path('api/start-recording/', start_data_acquisition, name='start-recording'),
