@@ -31,7 +31,6 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const { config, setConfig, saveConfig, loadDefaultSettings, loadUserSettings } = useConfig();
 
-  // Added 2025-12-09
   const initialPXI = {
     PXI1Slot5: {
       deviceName: "PXI1Slot5",

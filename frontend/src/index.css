@@ -1295,6 +1295,17 @@
     color: var(--foreground);
   }
 
+
+  .text-border {
+    color: var(--border);
+  }
+  .text-input {
+    color: var(--input);
+  }
+  .text-ring {
+    color: var(--ring);
+  }
+
   @supports (color: color-mix(in lab, red, red)) {
     .text-foreground\/90 {
       color: color-mix(in oklab, var(--foreground) 90%, transparent);

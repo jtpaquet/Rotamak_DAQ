@@ -16,8 +16,9 @@ import {
 } from "./ui/select";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 import { TimingDiagram } from "./TimingDiagram";
-import { Zap, Send } from "lucide-react";
+import { Zap, Send, Rocket, Flame, Info } from "lucide-react";
 import { NumberInput } from "./NumberInput";
 import { ConfigContext } from "../App";
 import { DAQControlData } from "../types/daq-control-data";
@@ -39,24 +40,24 @@ export function ControlsTab() {
       .then(data => {
         console.log("PXI preload response:", data);
 
-      // Check if 'data' is an object and contains 'pxi' (an array)
-      if (!data || !Array.isArray(data.pxi)) {
-        console.error("PXI preload returned unexpected structure:", data);
-        return;
-      }
-
-      // Convert the pxi array → dictionary
-      const dict: any = {};
-      for (const slot of data.pxi) {
-        if (slot?.deviceName) {
-          dict[slot.deviceName] = slot;
+        // Check if 'data' is an object and contains 'pxi' (an array)
+        if (!data || !Array.isArray(data.pxi)) {
+          console.error("PXI preload returned unexpected structure:", data);
+          return;
         }
-      }
 
-      // Update state with the constructed dictionary
-      setPxiPayloads(dict);
-    })
-    .catch(err => console.error("PXI preload error:", err));
+        // Convert the pxi array → dictionary
+        const dict: any = {};
+        for (const slot of data.pxi) {
+          if (slot?.deviceName) {
+            dict[slot.deviceName] = slot;
+          }
+        }
+
+        // Update state with the constructed dictionary
+        setPxiPayloads(dict);
+      })
+      .catch(err => console.error("PXI preload error:", err));
   }, []);
 
 
@@ -108,8 +109,7 @@ export function ControlsTab() {
     return duration;
   }
 
-
-  const handleDischarge = async () => {
+  const handleDAQRequest = async (endpoint) => {
     const daqControlData: DAQControlData = {
       triggers: {
         enable: { duration: enableDuration, delay: enableDelay },
@@ -137,7 +137,7 @@ export function ControlsTab() {
         batteryVoltage,
       },
     };
-      
+
     // Added 2025-12-09 the PXI acquisition payload
     const pxiData = Object.values(pxiPayloads).filter(Boolean);
 
@@ -146,82 +146,43 @@ export function ControlsTab() {
       pxi: pxiData,
     };
 
+    try {
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      console.log(`DAQ Control data sent to ${endpoint}:`, payload);
+    } catch (error) {
+      console.error('Failed to send DAQ control data:', error);
+    }
+  };
+
+  const startDischarge = async () => {
     setIsDischarging(true);
     setTimeout(() => setIsDischarging(false), 1000);
-
-    try {
-      // Send data to backend API endpoint
-      await fetch('/api/daq-discharge', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      console.log('DAQ Control data sent:', payload);
-    } catch (error) {
-      console.error('Failed to send DAQ control data:', error);
-    }
+    await handleDAQRequest('/api/daq-discharge');
   };
 
-  const handleSendData = async () => {
-    const daqControlData: DAQControlData = {
-      triggers: {
-        enable: { duration: enableDuration, delay: enableDelay },
-        dcField: { duration: dcDuration, delay: dcDelay },
-        rmfField: { duration: rmfDuration, delay: rmfDelay },
-        extra: { duration: extraDuration, delay: extraDelay },
-      },
-      raspberryPi: {
-        rmfFreq,
-        dutyCycle1,
-        dutyCycle2,
-      },
-      fileHandle: {
-        date,
-        shotNumber,
-        fileName,
-        fileAppend,
-        saveDirectory,
-        saveData,
-      },
-      shotInfo: {
-        gas,
-        pressure,
-        rfPower,
-        batteryVoltage,
-      },
-    };
-      
-    // Added 2025-12-09 the PXI acquisition payload
-    const pxiData = Object.values(pxiPayloads).filter(Boolean);
-
-    const payload = {
-      control: daqControlData,
-      pxi: pxiData,
-    };
-
-    try {
-      // Send data to backend API endpoint
-      await fetch('/api/daq-control', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      console.log('DAQ Control data sent:', payload);
-    } catch (error) {
-      console.error('Failed to send DAQ control data:', error);
-    }
+  // For sendSettings:
+  const sendSettings = async () => {
+    await handleDAQRequest('/api/daq-control');
   };
+
+  // For preFireTest:
+  const startPreFire = async () => {
+    await handleDAQRequest('/api/pre-fire');
+  };
+
 
   return (
     <div className="space-y-4">
       {/* Discharge Button - Centered */}
       <div className="flex justify-center">
         <button
-          onClick={handleDischarge}
+          onClick={startDischarge}
           disabled={isDischarging}
           className="group relative px-20 py-6 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 hover:from-amber-600 hover:via-orange-600 hover:to-red-600 text-white shadow-2xl hover:shadow-amber-500/50 transition-all duration-300 border border-amber-400/30 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
         >
@@ -248,14 +209,25 @@ export function ControlsTab() {
       </div>
 
       {/* Send Settings Button */}
-      <div className="flex justify-start">
-        <Button
-          onClick={handleSendData}
-          className="px-8 py-6 bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          <Send className="h-5 w-5 mr-2" />
-          Send Settings
-        </Button>
+      <div className="flex gap-4">
+        <div className="flex justify-start">
+          <Button
+            onClick={sendSettings}
+            className="px-8 py-6 bg-blue-600 hover:bg-blue-700 text-white">
+            <Send className="h-5 w-5 mr-2" />
+            Send Settings
+          </Button>
+        </div>
+
+        {/* Pre-fire Button */}
+        <div className="flex justify-start">
+          <Button
+            onClick={startPreFire}
+            className="px-8 py-6 bg-blue-600 hover:bg-blue-700 text-white">
+            <Rocket className="h-5 w-5 mr-2" />
+            Pre-fire/Test triggers
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -551,7 +523,27 @@ export function ControlsTab() {
         {/* Raspberry Pi Controls - Bottom Left */}
         <Card>
           <CardHeader>
-            <CardTitle>RMF Controls</CardTitle>
+            <div className="flex items-center">
+              <CardTitle className="mr-2">RMF Controls</CardTitle>
+
+              {/* Tooltip icon next to RMF Controls */}
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white cursor-pointer">
+                    <Info className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="text-lg arrow-none" side="right"
+                  style={{
+                    maxWidth: '600px'
+                  }}
+                  >
+                  The phase splitter takes a square wave that is four times the desired frequency.
+                  The duty cycle is also mapped from 0-100% to 50-25% at the output of the phase splitter.
+                  The frequency and duty cycle displayed on the function generator are not directly the output of the phase splitter.
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">

@@ -122,14 +122,14 @@ const defaultConfig: Config = {
   raspberryPi: {
     rmfFreq: {
       min: 1,
-      max: 2500,
+      max: 550,
       step: 0.5,
       decimals: 1,
       default: 125
     },
     dutyCycle: {
-      min: 10,
-      max: 90,
+      min: 25,
+      max: 50,
       step: 1,
       decimals: 0,
       default: 40
