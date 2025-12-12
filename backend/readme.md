@@ -38,3 +38,15 @@ Defined in `frontend/views.py`:
 
 ```http
 POST /api/start-recording/
+
+
+### 4. To access database
+
+> py manage.py runserver
+
+In browser open: http://127.0.0.1:8000/admin
+Username: SESL_admin
+Password: QREX
+
+
+

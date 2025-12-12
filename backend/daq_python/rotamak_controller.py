@@ -20,7 +20,6 @@ class RotamakController:
         self.daq = self.system
         self.main_clk_task = None
         self.discharge_task = None
-        self.rpi_port = None
         self.device_names = [d.name for d in self.daq.devices]
         self.daq_list = []
 
@@ -185,9 +184,24 @@ class RotamakController:
 
         return combined_data
     
-    def start_discharge(self, data):
+    def start_pre_fire(self, data):        
         print(data['control'])
         print(data['pxi'][0])
+        # Setup
+        self.setup_discharge(data)
+
+        # Start the shared DO task
+        # self.triggers.start_triggers()
+        # self.rmf.start_rmf()
+        self.triggers_and_rmf.start_task()
+
+        # Wait for completion
+        # self.triggers.wait_and_stop()
+        # self.rmf.wait_and_stop()
+        self.triggers_and_rmf.wait_and_stop()
+        pass
+
+    def start_discharge(self, data):
         # Setup
         self.setup_discharge(data)
 
@@ -231,13 +245,17 @@ class RotamakController:
         """Update the function generator frequency."""
         freq_hz = float(self.config['control']['raspberryPi']['rmfFreq']) * 1e3
         duty_cycle = float(self.config['control']['raspberryPi']['dutyCycle1']) / 100
+        fg_freq = freq_hz * 4
+        fg_duty_cycle = (0.50 - duty_cycle ) * 4
+        fg_duty_cycle = max(0.068, min(0.935, fg_duty_cycle))
         try:
-            self.fg.set_frequency(int(freq_hz))
-            self.fg.set_duty_cycle(int(duty_cycle*100))
+            self.fg.set_frequency(int(fg_freq))
+            self.fg.set_duty_cycle(int(fg_duty_cycle*100))
             self.fg.set_cmos_level(5)
             _freq_hz = self.fg.get_frequency()
             _duty_cycle = self.fg.get_duty_cycle() / 100
             print(f"Function generator updated to {_freq_hz/1e3:.1f} kHz - {_duty_cycle*100:.1f}% duty cycle")
+            print(f"Would result in frequency={_freq_hz/4/1e3:.1f} kHz - {(0.50-_duty_cycle/4)*100:.1f}% duty cycle")
         except Exception as e:
             print("Failed to update function generator:", e)
 

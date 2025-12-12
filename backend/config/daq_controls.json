@@ -2,16 +2,16 @@
   "control": {
     "triggers": {
       "enable": {
-        "duration": 200,
+        "duration": 100,
         "delay": 0
       },
       "dcField": {
-        "duration": 80,
-        "delay": 60
+        "duration": 40,
+        "delay": 40
       },
       "rmfField": {
         "duration": 40,
-        "delay": 80
+        "delay": 50
       },
       "extra": {
         "duration": 0,
@@ -19,12 +19,12 @@
       }
     },
     "raspberryPi": {
-      "rmfFreq": 143,
-      "dutyCycle1": 40,
-      "dutyCycle2": 40
+      "rmfFreq": 1432,
+      "dutyCycle1": 60,
+      "dutyCycle2": 60
     },
     "fileHandle": {
-      "date": "2025-12-10 - 16:51:13",
+      "date": "2025-12-11 - 16:34:51",
       "fileName": "",
       "fileAppend": "",
       "saveDirectory": "",

@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from daq_python.graph import plot_data
 from daq_python.controller_manager import controller
+from frontend.models import PreFire, PlasmaDischarge
 
 def index(request):
     return render(request, 'index.html')
@@ -22,7 +23,33 @@ def start_dischage(request):
     print('START DISCHARGE')
     data = request.data
     try:
+        last = PlasmaDischarge.objects.last()
+        next_number = 1 if last is None else last.number + 1
+        entry = PlasmaDischarge.objects.create(
+            number=data.get("number", next_number),     # or however you want to generate this
+            parameters=data                             # you can store the full data payload
+        )
+        print(f"📌 PreFire entry created with ID {entry.id}")
         controller.start_discharge(data)
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return Response({"success": False, "error": str(e)}, status=500)
+
+@api_view(['POST'])
+def start_pre_fire(request):
+    print('START PRE FIRE')
+    data = request.data
+    try:
+        
+        last = PreFire.objects.last()
+        next_number = 1 if last is None else last.number + 1
+        entry = PreFire.objects.create(
+            number=data.get("number", next_number),     # or however you want to generate this
+            parameters=data                             # you can store the full data payload
+        )
+        print(f"📌 PreFire entry created with ID {entry.id}")
+
+        controller.start_pre_fire(data)
         return JsonResponse({'status': 'ok'})
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
